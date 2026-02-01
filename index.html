@@ -92,6 +92,16 @@ button{
 .info{
   font-size:14px;
   margin-top:10px;
+}
+
+#positionInfo div{
+  display:flex;
+  justify-content:space-between;
+  margin-top:6px;
+}
+
+#plValue.profit{ color:#4caf50; }
+#plValue.loss{ color:#f44336; }
   
   
 #loading{
@@ -155,12 +165,25 @@ button{
     <br><br>
     <button class="sell" onclick="sell()">Sell Gold</button>
 
+    <div class="info" id="positionInfo">
+      <div>Entry Price: <b id="entryPrice">--</b></div>
+      <div>Current Price: <b id="currentPrice">--</b></div>
+      <div>P/L: <b id="plValue">--</b></div>
+    </div>
+
     <div class="info" id="result"></div>
   </div>
 
 </div>
 
 <script>
+
+let position = {
+  active: false,
+  entryPrice: 0,
+  amountUsd: 0,
+  goldOz: 0
+};
 
 /* ===== GOLD CHART ===== */
 new TradingView.widget({
@@ -179,50 +202,94 @@ new TradingView.widget({
 });
 
 /* ===== LIVE GOLD PRICE ===== */
+// async function fetchGold(){
+//   try{
+
+    
+//     const price = 4894.33;
+    
+//     // const r = await fetch("https://api.metals.dev/v1/metal/spot?api_key=CUGOLDHIGPLTRZDFBN8M334DFBN8M&&metal=gold");
+//     // const d = await r.json();
+//     // const price = d.rate.price;
+
+//     document.getElementById("goldPrice").textContent =
+//       "$"+price.toFixed(2);
+
+//     window.goldPrice = price;
+
+//     // hide loader after first successful fetch
+//     document.getElementById("loading").style.display = "none";
+
+//   }catch(e){
+//     console.log(e);
+//   }
+// }
+
 async function fetchGold(){
   try{
+    // base price
+    let price = 4894.33;
 
-    
-    const price = 4894.33;
-    
-    // const r = await fetch("https://api.metals.dev/v1/metal/spot?api_key=CUGOLDHIGPLTRZDFBN8M334DFBN8M&&metal=gold");
-    // const d = await r.json();
-    // const price = d.rate.price;
-
-    document.getElementById("goldPrice").textContent =
-      "$"+price.toFixed(2);
+    // fake market movement ±0.3%
+    const change = price * (Math.random() * 0.006 - 0.003);
+    price += change;
 
     window.goldPrice = price;
 
-    // hide loader after first successful fetch
+    document.getElementById("goldPrice").textContent =
+      "$" + price.toFixed(2);
+
+    document.getElementById("currentPrice").textContent =
+      "$" + price.toFixed(2);
+
+    if(position.active){
+      const pnl =
+        (price - position.entryPrice) * position.goldOz;
+
+      const plEl = document.getElementById("plValue");
+      plEl.textContent =
+        `${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} USD`;
+
+      plEl.className = pnl >= 0 ? "profit" : "loss";
+    }
+
     document.getElementById("loading").style.display = "none";
 
   }catch(e){
     console.log(e);
   }
 }
+
 fetchGold();
 setInterval(fetchGold,10000);
 
 /* ===== DEMO TRADING ===== */
 function buy(){
-  const amt = parseFloat(amount.value||0);
+  const amt = parseFloat(amount.value || 0);
   if(!amt || !window.goldPrice) return;
 
-  const gold = amt/window.goldPrice;
+  position.active = true;
+  position.entryPrice = window.goldPrice;
+  position.amountUsd = amt;
+  position.goldOz = amt / window.goldPrice;
 
-  result.innerHTML =
-    `You bought <b>${gold.toFixed(4)} oz</b> gold`;
+  document.getElementById("entryPrice").textContent =
+    "$" + position.entryPrice.toFixed(2);
+
+  document.getElementById("result").innerHTML =
+    `Position opened: <b>${position.goldOz.toFixed(4)} oz</b>`;
 }
 
 function sell(){
-  const amt = parseFloat(amount.value||0);
-  if(!amt || !window.goldPrice) return;
+  if(!position.active) return;
 
-  const gold = amt/window.goldPrice;
+  const pnl =
+    (window.goldPrice - position.entryPrice) * position.goldOz;
 
-  result.innerHTML =
-    `You sold <b>${gold.toFixed(4)} oz</b> gold`;
+  document.getElementById("result").innerHTML =
+    `Position closed. P/L: <b>${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} USD</b>`;
+
+  position.active = false;
 }
 
 </script>
