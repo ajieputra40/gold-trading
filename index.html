@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
 
 
 <title>Gold Trading</title>
@@ -42,7 +43,39 @@ body{
   color:#ffd700;
 }
 
+.price,
+#plValue,
+#entryPrice,
+#currentPrice{
+  font-variant-numeric: tabular-nums;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo{
+  width:36px;
+  height:36px;
+  object-fit:contain;
+}
+
+.brand-name{
+  font-size:18px;
+  letter-spacing:1px;
+  color:#ffd700;
+}
+
+.pair{
+  font-size:12px;
+  opacity:0.7;
+  margin-left:4px;
+}
+
 button{
+  font-family: 'Norwester', sans-serif;
   background:linear-gradient(90deg,#cfae3c,#ffd700);
   border:none;
   padding:10px 14px;
@@ -86,8 +119,8 @@ button{
   border-radius:6px;
 }
 
-.buy{ background:#2e7d32; color:#fff;}
-.sell{ background:#c62828; color:#fff;}
+.buy{ background:#2e7d32; color:#fff;width:100%;margin-bottom:10px}
+.sell{ background:#c62828; color:#fff;width:100%}
 
 .info{
   font-size:14px;
@@ -134,6 +167,48 @@ button{
 @keyframes spin{
   to{ transform:rotate(360deg); }
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 900px){
+  .container{
+    grid-template-columns: 1fr;
+    height:auto;
+  }
+
+  #chart{
+    height:60vh;
+  }
+
+  .panel{
+    border-left:none;
+    border-top:1px solid #3a2b0f;
+  }
+}
+
+@media (max-width: 480px){
+  .topbar{
+    padding:10px 14px;
+  }
+
+  .brand-name{
+    font-size:16px;
+  }
+
+  .price{
+    font-size:16px;
+  }
+
+  button{
+    padding:12px;
+    font-size:15px;
+  }
+
+  .input{
+    padding:12px;
+    font-size:16px;
+  }
+}
+
 </style>
 </head>
 
@@ -145,7 +220,11 @@ button{
   </div>
 
 <div class="topbar">
-  <div>Gold Trading (XAUUSD)</div>
+  <div class="brand">
+    <img src="assets/logo.png" alt="AurumX" class="logo">
+    <span class="brand-name">AurumX</span>
+    <span class="pair">XAUUSD</span>
+  </div>
   <div class="price" id="goldPrice">$--</div>
 </div>
 
@@ -162,7 +241,6 @@ button{
     <input id="amount" class="input" type="number" placeholder="100">
 
     <button class="buy" onclick="buy()">Buy Gold</button>
-    <br><br>
     <button class="sell" onclick="sell()">Sell Gold</button>
 
     <div class="info" id="positionInfo">
@@ -265,6 +343,8 @@ setInterval(fetchGold,10000);
 
 /* ===== DEMO TRADING ===== */
 function buy(){
+  if(position.active) return;
+
   const amt = parseFloat(amount.value || 0);
   if(!amt || !window.goldPrice) return;
 
