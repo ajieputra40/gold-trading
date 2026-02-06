@@ -293,6 +293,8 @@ button{
 
 <script>
 
+const PROFIT_RATE = 0.20;
+
 let position = {
   active: false,
   entryPrice: 0,
@@ -358,14 +360,20 @@ async function fetchGold(){
       "$" + price.toFixed(2);
 
     if(position.active){
-      const pnl =
-        (price - position.entryPrice) * position.goldOz;
+      // fake growing profit up to 20%
+      const targetProfit = position.amountUsd * PROFIT_RATE;
+
+      // make profit "grow" smoothly
+      if(!position.fakeProfit) position.fakeProfit = 0;
+      position.fakeProfit += targetProfit * 0.08; // grows 8% per tick
+
+      if(position.fakeProfit > targetProfit){
+        position.fakeProfit = targetProfit;
+      }
 
       const plEl = document.getElementById("plValue");
-      plEl.textContent =
-        `${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} USD`;
-
-      plEl.className = pnl >= 0 ? "profit" : "loss";
+      plEl.textContent = `+${position.fakeProfit.toFixed(2)} USD`;
+      plEl.className = "profit";
     }
 
     document.getElementById("loading").style.display = "none";
@@ -402,13 +410,18 @@ function buy(){
 function sell(){
   if(!position.active) return;
 
-  const pnl =
-    (window.goldPrice - position.entryPrice) * position.goldOz;
+  // Dummy fixed profit: 20% of the amount
+  const pnl = position.amountUsd * PROFIT_RATE;
 
   position.active = false;
 
   showProfit(pnl);
   openBankModal("sell");
+
+  // reset UI position
+  document.getElementById("entryPrice").textContent = "--";
+  document.getElementById("plValue").textContent = "--";
+  document.getElementById("plValue").className = "";
 }
 
 let currentAction = "";
@@ -433,7 +446,7 @@ function confirmTransfer(){
   }
 
   closeModal();
-  alert("Transfer instruction created (demo)");
+  // alert("Transfer instruction created (demo)");
 }
 
 function showProfit(pnl){
