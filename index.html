@@ -209,6 +209,43 @@ button{
   }
 }
 
+/* ===== MODAL ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+.modal-box{
+  background:#1a1408;
+  border:1px solid #3a2b0f;
+  padding:20px;
+  width:90%;
+  max-width:380px;
+  border-radius:10px;
+  text-align:center;
+}
+
+.modal-box h3{
+  margin-top:0;
+  color:#ffd700;
+}
+
+.modal-box button{
+  width:100%;
+  margin-top:10px;
+}
+
+.modal-box .secondary{
+  background:#2a1f0d;
+  color:#ffd700;
+}
+
+
 </style>
 </head>
 
@@ -268,7 +305,7 @@ new TradingView.widget({
   container_id:"chart",
   autosize:true,
   symbol:"OANDA:XAUUSD",
-  interval:"15",
+  interval:"W",
   theme:"dark",
   style:"1",
   locale:"en",
@@ -358,6 +395,8 @@ function buy(){
 
   document.getElementById("result").innerHTML =
     `Position opened: <b>${position.goldOz.toFixed(4)} oz</b>`;
+
+  openBankModal("buy");
 }
 
 function sell(){
@@ -366,13 +405,84 @@ function sell(){
   const pnl =
     (window.goldPrice - position.entryPrice) * position.goldOz;
 
-  document.getElementById("result").innerHTML =
-    `Position closed. P/L: <b>${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} USD</b>`;
-
   position.active = false;
+
+  showProfit(pnl);
+  openBankModal("sell");
+}
+
+let currentAction = "";
+
+function openBankModal(action){
+  currentAction = action;
+  document.getElementById("bankModal").style.display = "flex";
+}
+
+function closeModal(){
+  document.getElementById("bankModal").style.display = "none";
+}
+
+function confirmTransfer(){
+  const bank = bankName.value;
+  const name = accountName.value;
+  const acc = accountNumber.value;
+
+  if(!bank || !name || !acc){
+    alert("Please complete bank information");
+    return;
+  }
+
+  closeModal();
+  alert("Transfer instruction created (demo)");
+}
+
+function showProfit(pnl){
+  const el = document.getElementById("profitText");
+  el.innerHTML =
+    pnl >= 0
+      ? `🎉 You made a profit of <b style="color:#4caf50;">+${pnl.toFixed(2)} USD</b>`
+      : `⚠️ You had a loss of <b style="color:#f44336;">${pnl.toFixed(2)} USD</b>`;
+
+  document.getElementById("profitModal").style.display = "flex";
+}
+
+function closeProfit(){
+  document.getElementById("profitModal").style.display = "none";
 }
 
 </script>
+
+<div id="bankModal" class="modal">
+  <div class="modal-box">
+    <h3>Complete Your Transaction</h3>
+
+    <label>Bank</label>
+    <select id="bankName" class="input">
+      <option value="">Select Bank</option>
+      <option>BCA</option>
+      <option>Mandiri</option>
+      <option>BNI</option>
+      <option>BRI</option>
+    </select>
+
+    <label>Account Name</label>
+    <input id="accountName" class="input" placeholder="John Doe">
+
+    <label>Account Number</label>
+    <input id="accountNumber" class="input" placeholder="1234567890">
+
+    <button onclick="confirmTransfer()">Confirm Transfer</button>
+    <button class="secondary" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<div id="profitModal" class="modal">
+  <div class="modal-box">
+    <h3>Transaction Result</h3>
+    <p id="profitText"></p>
+    <button onclick="closeProfit()">Done</button>
+  </div>
+</div>
 
 </body>
 </html>
